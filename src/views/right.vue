@@ -1,8 +1,40 @@
 <template>
   <div class="right">
     <el-row>
-      <el-button type="info" plain style="margin-top:20px;margin-left:20px;" @click="open">添加</el-button>
-    </el-row>
+      <el-button plain style="margin-top:20px;margin-left:20px;" type="warning" @click="dialogFormVisible = true">添加</el-button>
+
+      <el-dialog title="添加/修改" :visible.sync="dialogFormVisible">
+        <el-form>
+          <el-form-item label="用户名">
+            <el-input v-model="user.name" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="密码" prop="pass">
+            <el-input v-model="user.pass" type="password" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="确认密码" prop="checkPass">
+            <el-input v-model="pass" type="password" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="描述">
+            <el-input v-model="user.des" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="时间">
+            <el-date-picker
+              v-model="user.time"
+              type="date"
+              placeholder="选择日期" autocomplete="off">
+            </el-date-picker>
+            <!-- <el-input v-model="formdata.time" autocomplete="off"></el-input> -->
+          </el-form-item>
+          
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button style="background:#98F5FF;" @click="dialogFormVisible = false">取 消</el-button>
+          <el-button style="background:#98F5FF;" type="primary" @click="myadd()">确 定</el-button>
+          
+        </div>
+      </el-dialog>
+
+      </el-row>
     <el-table border
     :data="tableData.filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
     style="width: 1000px;margin:0 auto" height="300"
@@ -41,12 +73,13 @@
         <el-button
           style="background:#98F5FF;"
           size="mini"
-          @click="handleEdit()">查看</el-button>
+          plain
+          type="warning" @click="dialogFormVisible = true">查看</el-button>
         <el-button
         style="background:#FF4500"
           size="mini"
-          type="danger"
-          @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+          type="text"
+          @click="del(scope.row.id)">删除</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -58,6 +91,7 @@ import API from "../common/js/API.js";
 export default {
   data() {
     return {
+      pass: "",
       tableData: [
         {
           des: "",
@@ -67,133 +101,22 @@ export default {
           time: ""
         }
       ],
-      search: ""
+      user: {
+        des: "",
+        name: "",
+        pass: "",
+        time: ""
+      },
+      dialogVisible: false,
+      search: "",
+      dialogTableVisible: false,
+      dialogFormVisible: false,
+  
     };
   },
   methods: {
-    open() {
-      const h = this.$createElement;
-      this.$msgbox({
-        title: "添加",
-        message: h("div", null, [
-          h("div", null, [
-            h("span", null, "账号："),
-            h("input", {
-              style: "width:70%;margin:10px 0 10px 50px;padding:0;display:inline-block;"
-            })
-          ]),
-          h("div", null, [
-            h("span", null, "密码："),
-            h("input", {
-              style: "width:70%;margin:10px 0 10px 50px;padding:0;display:inline-block;"
-            })
-          ]),
-          h("div", null, [
-            h("span", null, "确认密码："),
-            h("input", {
-              style: "width:70%;margin:10px 0 10px 20px;padding:0;display:inline-block;"
-            })
-          ]),
-          h("div", null, [
-            h("span", null, "描述："),
-            h("input", {
-              style: "width:70%;margin:10px 0 10px 50px;padding:0;display:inline-block;"
-            })
-          ]),
-          h("div", null, [
-            h("span", null, "时间："),
-            h("input", {
-              style: "width:70%;margin:10px 0 10px 50px;padding:0;display:inline-block;"
-            })
-          ])
-        ]),
-        showCancelButton: true,
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        beforeClose: (action, instance, done) => {
-          if (action === "confirm") {
-            instance.confirmButtonLoading = true;
-            instance.confirmButtonText = "执行中...";
-            setTimeout(() => {
-              done();
-              setTimeout(() => {
-                instance.confirmButtonLoading = false;
-              }, 300);
-            }, 3000);
-          } else {
-            done();
-          }
-        }
-      }).then(action => {
-        this.$message({
-          type: "info",
-          message: "action: " + action
-        });
-      });
-    },
-    handleEdit() {
-      const h = this.$createElement;
-      this.$msgbox({
-        title: "修改",
-        message: h("div", null, [
-          h("div", null, [
-            h("span", null, "用户名:"),
-            h("input", {
-              style: "margin:10px 10px;padding:0;display:inline-block;"
-            })
-          ]),
-          h("div", null, [
-            h("span", null, "密 码："),
-            h("input", {
-              style: "margin:10px 10px;padding:0;display:inline-block;"
-            })
-          ]),
-          h("div", null, [
-            h("span", null, "描 述："),
-            h("input", {
-              style: "margin:10px 10px;padding:0;display:inline-block;"
-            })
-          ]),
-          h("div", null, [
-            h("span", null, "时 间："),
-            h("input", {
-              style: "margin:10px 10px;padding:0;display:inline-block;"
-            })
-          ])
-        ]),
-        showCancelButton: true,
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        beforeClose: (action, instance, done) => {
-          if (action === "confirm") {
-            instance.confirmButtonLoading = true;
-            instance.confirmButtonText = "执行中...";
-            setTimeout(() => {
-              done();
-              setTimeout(() => {
-                instance.confirmButtonLoading = false;
-              }, 300);
-            }, 3000);
-          } else {
-            done();
-          }
-        }
-      }).then(action => {
-        this.$message({
-          type: "info",
-          message: "action: " + action
-        });
-      });
-    },
-    handleDelete(index, row) {
-      console.log(index, row);
-    },
-    deleteRow(index, rows) {
-      rows.splice(index, 1);
-    }
-  },
-  mounted() {
-    this.$axios({
+    init(){
+       this.$axios({
       url: API.findManage,
       method: "post"
     }).then(res => {
@@ -204,6 +127,55 @@ export default {
         alert(res.data.info);
       }
     });
+    },
+    myadd() {
+      (this.dialogFormVisible = false),
+        this.$axios({
+          url: API.addManage,
+          method: "post",
+          data: this.user
+        }).then(res => {
+          console.log(res);
+          if (res.data.isok) {
+            alert(res.data.info);
+          } else {
+            alert(res.data.info);
+          }
+        });
+    },
+    del(i) {
+      this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        this.$axios({
+          url: API.delManage,
+          method: "post",
+          data: {id:i}
+        }).then(res => {
+          console.log(res);
+          if (res.data.isok) {
+            // alert(res.data.info);
+            console.log(res.data,i);
+            this.init();
+            
+          } else {
+            alert(res.data.info);
+          }
+        });
+      });
+    },
+    isDel() {
+      this.isDel = false;
+      this.$emit("del", this.id);
+    },
+    deleteRow(index, rows) {
+      rows.splice(index, 1);
+    }
+  },
+  mounted() {
+   this.init();
   }
 };
 </script>
